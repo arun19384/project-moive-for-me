@@ -65,9 +65,7 @@ export default function AddClient({ mode }: { mode: StorageMode }) {
 
   useEffect(() => {
     if (debouncedQuery.trim().length < 2) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSearchResults([])
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowResults(false)
       return
     }
@@ -157,35 +155,36 @@ export default function AddClient({ mode }: { mode: StorageMode }) {
               <X size={15} color="var(--faint)" />
             </button>
           )}
-        </div>
 
-        {showResults && searchResults.length > 0 && (
-          <div className="mt-1 rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)', background: 'var(--surface-2)' }}>
-            {searchResults.map((r) => (
-              <button
-                key={r.imdbId}
-                type="button"
-                onClick={() => selectResult(r)}
-                className="flex items-center gap-3 w-full px-3 py-2.5 text-left transition-colors hover:bg-[#1E1E1E]"
-                style={{ borderBottom: '1px solid var(--border-dim)' }}
-              >
-                {r.poster ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={posterSrc(r.poster, 'w185')} alt={r.title} loading="lazy" decoding="async" className="w-9 h-12 object-cover rounded-lg shrink-0" />
-                ) : (
-                  <div className="w-9 h-12 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold"
-                    style={{ background: 'var(--border)', color: 'var(--faint)' }}>
-                    {r.title[0]}
+          {showResults && searchResults.length > 0 && (
+            <div className="absolute left-0 right-0 top-full mt-2 rounded-xl overflow-y-auto z-50"
+              style={{ border: '1px solid var(--border)', background: 'var(--surface-2)', maxHeight: '60vh', overscrollBehavior: 'contain' }}>
+              {searchResults.map((r) => (
+                <button
+                  key={r.imdbId}
+                  type="button"
+                  onClick={() => selectResult(r)}
+                  className="flex items-center gap-3 w-full px-3 py-2.5 text-left transition-colors hover:bg-[#1E1E1E]"
+                  style={{ borderBottom: '1px solid var(--border-dim)' }}
+                >
+                  {r.poster ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={posterSrc(r.poster, 'w185')} alt={r.title} loading="lazy" decoding="async" className="w-9 h-12 object-cover rounded-lg shrink-0" />
+                  ) : (
+                    <div className="w-9 h-12 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold"
+                      style={{ background: 'var(--border)', color: 'var(--faint)' }}>
+                      {r.title[0]}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold dy-text truncate">{r.title}</p>
+                    {r.year && <p className="text-xs mt-0.5" style={{ color: 'var(--dim)' }}>{r.year}</p>}
                   </div>
-                )}
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold dy-text truncate">{r.title}</p>
-                  {r.year && <p className="text-xs mt-0.5" style={{ color: 'var(--dim)' }}>{r.year}</p>}
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         {searching && (
           <p className="text-xs mt-2" style={{ color: 'var(--faint)' }}>Searching...</p>
         )}

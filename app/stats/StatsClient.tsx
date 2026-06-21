@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import AppHeader from '@/components/AppHeader'
@@ -11,7 +11,7 @@ import { posterSrc } from '@/lib/img'
 import {
   Film, Tv, Sparkles, Clock, Calendar, Flame, Trophy, TrendingUp, Star,
   Target, Zap, BarChart3, Award, ChevronRight, Activity as ActivityIcon,
-  Pencil, Plus, X, Search, Check, Heart, Crown, Medal,
+  Pencil, Plus, X, Search, Check, Heart, Crown, Medal, Share2, Upload,
 } from 'lucide-react'
 
 type TopItem = { id: number; title: string; type: string; coverUrl: string | null; rating: number }
@@ -65,9 +65,16 @@ export default function StatsClient({
   const [stats, setStats] = useState<Stats | null>(initialStats)
   const [titles, setTitles] = useState<ShelfTitle[]>(initialTitles ?? [])
   const [loading, setLoading] = useState(initialStats == null)
-  const [top10, setTop10] = useState<(number | null)[]>(() => Array(10).fill(null))
+  const [activeTab, setActiveTab] = useState<'all' | 'movie' | 'series' | 'anime'>('all')
+  const [lists, setLists] = useState<Record<'all' | 'movie' | 'series' | 'anime', (number | null)[]>>({
+    all: Array(10).fill(null),
+    movie: Array(10).fill(null),
+    series: Array(10).fill(null),
+    anime: Array(10).fill(null),
+  })
   const [picking, setPicking] = useState<number | null>(null)
   const [editMode, setEditMode] = useState(false)
+  const [sharing, setSharing] = useState(false)
 
   useEffect(() => {
     if (initialStats == null) {
@@ -88,12 +95,21 @@ export default function StatsClient({
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(TOP10_KEY)
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        if (Array.isArray(parsed) && parsed.length === 10) setTop10(parsed)
+      const loadList = (key: string) => {
+        const raw = localStorage.getItem(key)
+        if (raw) {
+          const parsed = JSON.parse(raw)
+          if (Array.isArray(parsed) && parsed.length === 10) return parsed
+        }
+        return Array(10).fill(null)
       }
+      const initialLists = {
+        all: loadList(TOP10_KEY),
+        movie: loadList(`${TOP10_KEY}:movie`),
+        series: loadList(`${TOP10_KEY}:series`),
+        anime: loadList(`${TOP10_KEY}:anime`),
+      }
+      setTimeout(() => setLists(initialLists), 0)
     } catch {}
   }, [])
 
@@ -142,11 +158,13 @@ export default function StatsClient({
   const ratedTotal = stats.ratingDist.reduce((s, r) => s + r.count, 0)
 
   const titleMap = new Map(titles.map(t => [t.id, t]))
+  const top10 = lists[activeTab]
   const top10Filled = top10.filter(Boolean).length
 
   function saveTop10(arr: (number | null)[]) {
-    setTop10(arr)
-    try { localStorage.setItem(TOP10_KEY, JSON.stringify(arr)) } catch {}
+    setLists(prev => ({ ...prev, [activeTab]: arr }))
+    const key = activeTab === 'all' ? TOP10_KEY : `${TOP10_KEY}:${activeTab}`
+    try { localStorage.setItem(key, JSON.stringify(arr)) } catch {}
   }
   function setSlot(slot: number, titleId: number | null) {
     const next = [...top10]
@@ -280,18 +298,58 @@ export default function StatsClient({
               {top10Filled}/10 picked · your all-time favorites
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setEditMode(v => !v)}
-            className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg flex items-center gap-1"
-            style={{
-              background: editMode ? '#C9A84C' : 'transparent',
-              color: editMode ? '#0D0D0D' : '#C9A84C',
-              border: `1px solid ${editMode ? '#C9A84C' : 'rgba(201,168,76,0.4)'}`,
-            }}
-          >
-            {editMode ? <><Check size={12} strokeWidth={3} /> Done</> : <><Pencil size={11} /> Edit</>}
-          </button>
+          <div className="flex items-center gap-1.5">
+            {!editMode && (
+              <button
+                type="button"
+                onClick={() => setSharing(true)}
+                className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer"
+                style={{
+                  background: 'transparent',
+                  color: '#C9A84C',
+                  border: '1px solid rgba(201,168,76,0.4)',
+                }}
+              >
+                <Share2 size={11} /> Share
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setEditMode(v => !v)}
+              className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer"
+              style={{
+                background: editMode ? '#C9A84C' : 'transparent',
+                color: editMode ? '#0D0D0D' : '#C9A84C',
+                border: `1px solid ${editMode ? '#C9A84C' : 'rgba(201,168,76,0.4)'}`,
+              }}
+            >
+              {editMode ? <><Check size={12} strokeWidth={3} /> Done</> : <><Pencil size={11} /> Edit</>}
+            </button>
+          </div>
+        </div>
+
+        {/* Tab Selector */}
+        <div className="flex gap-1.5 mb-4 p-1 rounded-xl" style={{ background: 'var(--surface-2)', border: '1px solid var(--border-dim)' }}>
+          {(['all', 'movie', 'series', 'anime'] as const).map(tab => {
+            const isActive = activeTab === tab
+            return (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => {
+                  setActiveTab(tab)
+                  setEditMode(false)
+                }}
+                className="flex-1 text-[11px] font-bold py-1.5 rounded-lg capitalize transition-all duration-200"
+                style={{
+                  background: isActive ? '#C9A84C' : 'transparent',
+                  color: isActive ? '#0D0D0D' : 'var(--muted)',
+                }}
+              >
+                {tab === 'all' ? 'All' : tab}
+              </button>
+            )
+          })}
         </div>
 
         {/* #1 hero */}
@@ -706,6 +764,16 @@ export default function StatsClient({
           alreadyPicked={new Set(top10.filter((x): x is number => x != null))}
           onPick={(id) => { setSlot(picking, id); setPicking(null) }}
           onClose={() => setPicking(null)}
+          filterType={activeTab === 'all' ? undefined : activeTab}
+        />
+      )}
+
+      {sharing && (
+        <ShareCardModal
+          activeTab={activeTab}
+          top10={top10}
+          titles={titles}
+          onClose={() => setSharing(false)}
         />
       )}
     </div>
@@ -713,16 +781,21 @@ export default function StatsClient({
 }
 
 function TitlePickerModal({
-  slot, titles, alreadyPicked, onPick, onClose,
+  slot, titles, alreadyPicked, onPick, onClose, filterType,
 }: {
   slot: number
   titles: ShelfTitle[]
   alreadyPicked: Set<number>
   onPick: (id: number) => void
   onClose: () => void
+  filterType?: 'movie' | 'series' | 'anime'
 }) {
   const [q, setQ] = useState('')
-  const filtered = titles.filter(t => t.title.toLowerCase().includes(q.toLowerCase()))
+  const filtered = titles.filter(t => {
+    const matchesQuery = t.title.toLowerCase().includes(q.toLowerCase())
+    const matchesType = !filterType || t.type === filterType
+    return matchesQuery && matchesType
+  })
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={onClose}>
@@ -805,6 +878,472 @@ function TitlePickerModal({
             </div>
           )}
         </div>
+      </div>
+    </div>
+  )
+}
+
+const BACKGROUND_THEMES = [
+  { id: 'gold', name: 'Dark Gold', colors: ['#1A1410', '#0D0D0D', '#050505'], preview: 'linear-gradient(135deg, #1A1410, #0D0D0D)' },
+  { id: 'blue', name: 'Midnight Blue', colors: ['#0A1128', '#000411', '#020205'], preview: 'linear-gradient(135deg, #0A1128, #000411)' },
+  { id: 'green', name: 'Forest Green', colors: ['#0D1F10', '#080F09', '#030504'], preview: 'linear-gradient(135deg, #0D1F10, #080F09)' },
+  { id: 'wine', name: 'Velvet Wine', colors: ['#200B0E', '#0F0507', '#050203'], preview: 'linear-gradient(135deg, #200B0E, #0F0507)' },
+  { id: 'carbon', name: 'Carbon Black', colors: ['#161616', '#0A0A0A', '#030303'], preview: 'linear-gradient(135deg, #161616, #0A0A0A)' },
+]
+
+function ShareCardModal({
+  activeTab, top10, titles, onClose,
+}: {
+  activeTab: 'all' | 'movie' | 'series' | 'anime'
+  top10: (number | null)[]
+  titles: ShelfTitle[]
+  onClose: () => void
+}) {
+  const [imgData, setImgData] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedTheme, setSelectedTheme] = useState('gold')
+  const [customBgUrl, setCustomBgUrl] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setCustomBgUrl(event.target.result as string)
+        setSelectedTheme('custom')
+        setLoading(true)
+      }
+    }
+    reader.readAsDataURL(file)
+  }
+
+  useEffect(() => {
+    const titleMap = new Map(titles.map(t => [t.id, t]))
+
+    const generate = async () => {
+      try {
+        const canvas = document.createElement('canvas')
+        canvas.width = 1200
+        canvas.height = 1800
+        const ctx = canvas.getContext('2d')
+        if (!ctx) throw new Error('Could not get canvas context')
+
+        const loadImg = (src: string): Promise<HTMLImageElement> => {
+          return new Promise((resolve, reject) => {
+            const img = new Image()
+            img.crossOrigin = 'anonymous'
+            img.onload = () => resolve(img)
+            img.onerror = () => reject(new Error('Failed to load image'))
+            img.src = src
+          })
+        }
+
+        // Draw background gradient or custom image
+        let customBgImg: HTMLImageElement | null = null
+        if (selectedTheme === 'custom' && customBgUrl) {
+          try {
+            customBgImg = await loadImg(customBgUrl)
+          } catch {}
+        }
+
+        if (selectedTheme === 'custom' && customBgImg) {
+          const imgRatio = customBgImg.width / customBgImg.height
+          const targetRatio = 1200 / 1800
+          let sx = 0, sy = 0, sw = customBgImg.width, sh = customBgImg.height
+          if (imgRatio > targetRatio) {
+            sw = customBgImg.height * targetRatio
+            sx = (customBgImg.width - sw) / 2
+          } else {
+            sh = customBgImg.width / targetRatio
+            sy = (customBgImg.height - sh) / 2
+          }
+          ctx.drawImage(customBgImg, sx, sy, sw, sh, 0, 0, 1200, 1800)
+
+          // Dark overlay to maintain readability
+          ctx.fillStyle = 'rgba(0,0,0,0.65)'
+          ctx.fillRect(0, 0, 1200, 1800)
+        } else {
+          const theme = BACKGROUND_THEMES.find(t => t.id === selectedTheme) || BACKGROUND_THEMES[0]
+          const bgGrad = ctx.createLinearGradient(0, 0, 0, 1800)
+          bgGrad.addColorStop(0, theme.colors[0])
+          bgGrad.addColorStop(0.6, theme.colors[1])
+          bgGrad.addColorStop(1, theme.colors[2])
+          ctx.fillStyle = bgGrad
+          ctx.fillRect(0, 0, 1200, 1800)
+        }
+
+        // Draw double borders
+        ctx.strokeStyle = 'rgba(201, 168, 76, 0.15)'
+        ctx.lineWidth = 2
+        ctx.strokeRect(15, 15, 1170, 1770)
+
+        ctx.strokeStyle = 'rgba(201, 168, 76, 0.35)'
+        ctx.lineWidth = 1
+        ctx.strokeRect(25, 25, 1150, 1750)
+
+        // Draw branding
+        ctx.fillStyle = '#C9A84C'
+        ctx.textAlign = 'center'
+        ctx.font = 'bold 72px Georgia, serif'
+        ctx.fillText('Do young', 600, 110)
+
+        ctx.fillStyle = '#888888'
+        ctx.font = 'bold 20px system-ui, -apple-system, sans-serif'
+        ctx.fillText(`MY TOP 10 ${activeTab.toUpperCase()} OF LIFE TIME`, 600, 165)
+
+        // Draw horizontal gold line
+        ctx.strokeStyle = 'rgba(201, 168, 76, 0.4)'
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.moveTo(350, 205)
+        ctx.lineTo(850, 205)
+        ctx.stroke()
+
+        // Draw footer
+        ctx.fillStyle = '#C9A84C'
+        ctx.font = 'italic 24px Georgia, serif'
+        ctx.fillText('your watched shelf', 600, 1690)
+
+        ctx.fillStyle = '#555555'
+        ctx.font = '16px system-ui, -apple-system, sans-serif'
+        ctx.fillText('doyoung.app', 600, 1730)
+
+        // Preload images
+
+        const loadedImages = await Promise.all(
+          top10.map(async (id) => {
+            if (id == null) return null
+            const t = titleMap.get(id)
+            if (!t || !t.coverUrl) return null
+            const url = posterSrc(t.coverUrl, 'w500')
+            if (!url) return null
+            try {
+              return await loadImg(url)
+            } catch {
+              return null
+            }
+          })
+        )
+
+        // Helper: rounded rect path
+        const drawRoundedRectPath = (c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) => {
+          c.beginPath()
+          c.moveTo(x + r, y)
+          c.arcTo(x + w, y, x + w, y + h, r)
+          c.arcTo(x + w, y + h, x, y + h, r)
+          c.arcTo(x, y + h, x, y, r)
+          c.arcTo(x, y, x + w, y, r)
+          c.closePath()
+        }
+
+        // Helper: text wrapper
+        const wrapText = (c: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, lineHeight: number) => {
+          const words = text.split(' ')
+          let line = ''
+          let currentY = y
+          for (let n = 0; n < words.length; n++) {
+            const testLine = line + words[n] + ' '
+            const metrics = c.measureText(testLine)
+            if (metrics.width > maxWidth && n > 0) {
+              c.fillText(line, x, currentY)
+              line = words[n] + ' '
+              currentY += lineHeight
+            } else {
+              line = testLine
+            }
+          }
+          c.fillText(line, x, currentY)
+        }
+
+        // Render Slots
+        for (let i = 0; i < 10; i++) {
+          const id = top10[i]
+          const t = id != null ? titleMap.get(id) : null
+
+          // Compute dimensions
+          let x = 0, y = 0, w = 0, h = 0
+          if (i === 0) { // Rank 1 (GOAT)
+            x = 410; y = 260; w = 380; h = 507
+          } else if (i === 1) { // Rank 2 (Silver)
+            x = 80; y = 360; w = 280; h = 373
+          } else if (i === 2) { // Rank 3 (Bronze)
+            x = 840; y = 360; w = 280; h = 373
+          } else if (i >= 3 && i <= 6) { // Ranks 4-7
+            w = 180; h = 240; y = 920
+            x = 195 + (i - 3) * 210
+          } else { // Ranks 8-10
+            w = 180; h = 240; y = 1240
+            x = 300 + (i - 7) * 210
+          }
+
+          // Draw Slot Shadow & Background
+          ctx.save()
+          ctx.shadowColor = 'rgba(0,0,0,0.6)'
+          ctx.shadowBlur = 16
+          ctx.shadowOffsetY = 8
+
+          ctx.fillStyle = '#141414'
+          drawRoundedRectPath(ctx, x, y, w, h, 16)
+          ctx.fill()
+          ctx.restore()
+
+          // Draw Poster or Placeholder
+          const img = loadedImages[i]
+          if (img) {
+            ctx.save()
+            drawRoundedRectPath(ctx, x, y, w, h, 16)
+            ctx.clip()
+
+            // Draw cover fit
+            const imgRatio = img.width / img.height
+            const targetRatio = w / h
+            let sx = 0, sy = 0, sw = img.width, sh = img.height
+            if (imgRatio > targetRatio) {
+              sw = img.height * targetRatio
+              sx = (img.width - sw) / 2
+            } else {
+              sh = img.width / targetRatio
+              sy = (img.height - sh) / 2
+            }
+            ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h)
+
+            // Bottom gradient overlay
+            const grad = ctx.createLinearGradient(x, y + h * 0.5, x, y + h)
+            grad.addColorStop(0, 'rgba(0,0,0,0)')
+            grad.addColorStop(1, 'rgba(0,0,0,0.85)')
+            ctx.fillStyle = grad
+            ctx.fillRect(x, y + h * 0.5, w, h * 0.5)
+            ctx.restore()
+          } else if (t) {
+            // Missing poster but has title (draw text placeholder)
+            ctx.save()
+            ctx.strokeStyle = '#2A2A2A'
+            ctx.lineWidth = 1
+            drawRoundedRectPath(ctx, x, y, w, h, 16)
+            ctx.stroke()
+
+            ctx.fillStyle = '#ffffff'
+            ctx.textAlign = 'center'
+            ctx.textBaseline = 'middle'
+            ctx.font = 'bold 16px system-ui, -apple-system, sans-serif'
+            wrapText(ctx, t.title, x + w/2, y + h/2, w - 20, 22)
+            ctx.restore()
+          } else {
+            // Empty slot
+            ctx.save()
+            ctx.strokeStyle = 'rgba(201, 168, 76, 0.25)'
+            ctx.lineWidth = 2
+            ctx.setLineDash([6, 6])
+            drawRoundedRectPath(ctx, x, y, w, h, 16)
+            ctx.stroke()
+
+            ctx.fillStyle = 'rgba(201, 168, 76, 0.35)'
+            ctx.textAlign = 'center'
+            ctx.textBaseline = 'middle'
+            ctx.font = '24px system-ui, -apple-system, sans-serif'
+            ctx.fillText('+', x + w/2, y + h/2)
+            ctx.restore()
+          }
+
+          // Draw Rank Badge overlay
+          ctx.save()
+          let badgeColor = 'rgba(0,0,0,0.75)'
+          let textCol = '#ffffff'
+          let isGOAT = false
+          let isPodium = false
+
+          if (i === 0) {
+            badgeColor = '#C9A84C'
+            textCol = '#0D0D0D'
+            isGOAT = true
+          } else if (i === 1) {
+            badgeColor = '#D9D9D9'
+            textCol = '#0D0D0D'
+            isPodium = true
+          } else if (i === 2) {
+            badgeColor = '#D88B5C'
+            textCol = '#0D0D0D'
+            isPodium = true
+          }
+
+          // Badge shape
+          const badgeRadius = isGOAT ? 26 : (isPodium ? 22 : 18)
+          const bx = x + badgeRadius + 12
+          const by = y + badgeRadius + 12
+
+          ctx.shadowColor = 'rgba(0,0,0,0.4)'
+          ctx.shadowBlur = 8
+          ctx.fillStyle = badgeColor
+          ctx.beginPath()
+          ctx.arc(bx, by, badgeRadius, 0, Math.PI * 2)
+          ctx.fill()
+
+          ctx.shadowBlur = 0
+          ctx.fillStyle = textCol
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.font = `bold ${isGOAT ? 22 : (isPodium ? 18 : 15)}px system-ui, sans-serif`
+          ctx.fillText(String(i + 1), bx, by)
+          ctx.restore()
+        }
+
+        const dataUrl = canvas.toDataURL('image/png')
+        setTimeout(() => {
+          setImgData(dataUrl)
+          setLoading(false)
+        }, 0)
+      } catch (err) {
+        if (err instanceof Error && err.name !== 'AbortError') {
+          setError(err.message || 'Failed to generate image')
+        }
+        setTimeout(() => {
+          setLoading(false)
+        }, 0)
+      }
+    }
+
+    generate()
+  }, [activeTab, top10, titles, selectedTheme, customBgUrl])
+
+  const copyToClipboard = async () => {
+    if (!imgData) return
+    try {
+      const response = await fetch(imgData)
+      const blob = await response.blob()
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          [blob.type]: blob
+        })
+      ])
+      alert('Copied image to clipboard! / คัดลอกรูปภาพแล้ว')
+    } catch {
+      alert('Could not copy automatically. Please hold-press or right-click to copy. / ไม่สามารถคัดลอกรูปภาพอัตโนมัติได้ กรุณากดค้างหรือคลิกขวาเพื่อบันทึกแทน')
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={onClose}>
+      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.75)' }} />
+      <div
+        onClick={e => e.stopPropagation()}
+        className="relative w-full max-w-lg max-h-[90dvh] rounded-t-3xl sm:rounded-3xl flex flex-col"
+        style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+      >
+        <div className="p-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border-dim)' }}>
+          <div>
+            <p className="text-[11px] uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Share Card</p>
+            <p className="text-lg font-bold dy-text">Top 10 {activeTab}</p>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="w-8 h-8 rounded-full flex items-center justify-center"
+            style={{ background: 'var(--surface-2)', color: 'var(--muted)' }}
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <div className="w-8 h-8 rounded-full border-2 border-t-[#C9A84C] border-r-transparent border-b-[#C9A84C] border-l-transparent animate-spin" />
+            <p className="text-xs font-semibold" style={{ color: 'var(--muted)' }}>
+              กำลังสร้างการ์ดแชร์ของคุณ... / Generating Card...
+            </p>
+          </div>
+        )}
+
+        {error && (
+          <div className="flex flex-col items-center justify-center py-10 gap-4 text-center">
+            <p className="text-sm text-red-500">{error}</p>
+            <button onClick={onClose} className="px-4 py-2 bg-red-500 rounded-lg text-white">Close</button>
+          </div>
+        )}
+
+        {imgData && !loading && !error && (
+          <div className="flex-1 overflow-y-auto px-4 pb-4 flex flex-col items-center gap-4 mt-4">
+            <div className="w-full max-w-[300px] aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl border border-[rgba(201,168,76,0.3)]">
+              <img src={imgData} alt="Shareable Card Preview" className="w-full h-full object-contain" />
+            </div>
+            <p className="text-[10px] text-center" style={{ color: 'var(--muted)' }}>
+              กดค้างที่รูปภาพเพื่อบันทึก หรือใช้ปุ่มด้านล่าง
+            </p>
+
+            {/* Theme Selector */}
+            <div className="flex flex-col gap-2 w-full mt-1">
+              <p className="text-[10px] uppercase tracking-wider font-semibold text-center" style={{ color: 'var(--muted)' }}>
+                เลือกพื้นหลัง / Background Theme
+              </p>
+              <div className="flex gap-3 justify-center py-1 items-center">
+                {BACKGROUND_THEMES.map(theme => {
+                  const isActive = selectedTheme === theme.id
+                  return (
+                    <button
+                      key={theme.id}
+                      type="button"
+                      onClick={() => {
+                        setLoading(true)
+                        setSelectedTheme(theme.id)
+                      }}
+                      className="w-7 h-7 rounded-full cursor-pointer transition-all duration-200 border-2"
+                      style={{
+                        background: theme.preview,
+                        borderColor: isActive ? '#C9A84C' : 'transparent',
+                        transform: isActive ? 'scale(1.15)' : 'none',
+                        boxShadow: isActive ? '0 0 8px rgba(201,168,76,0.5)' : 'none',
+                      }}
+                      title={theme.name}
+                    />
+                  )
+                })}
+
+                {/* Custom upload button */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-7 h-7 rounded-full cursor-pointer flex items-center justify-center transition-all duration-200 border-2"
+                  style={{
+                    background: selectedTheme === 'custom' && customBgUrl ? `url(${customBgUrl}) center/cover no-repeat` : 'var(--surface-2)',
+                    borderColor: selectedTheme === 'custom' ? '#C9A84C' : 'var(--border)',
+                    boxShadow: selectedTheme === 'custom' ? '0 0 8px rgba(201,168,76,0.5)' : 'none',
+                    color: selectedTheme === 'custom' ? '#C9A84C' : 'var(--muted)',
+                  }}
+                  title="Upload Custom Background"
+                >
+                  {!(selectedTheme === 'custom' && customBgUrl) && <Upload size={12} />}
+                </button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 w-full mt-2">
+              <button
+                onClick={copyToClipboard}
+                className="flex-1 py-3 rounded-xl font-bold text-xs cursor-pointer"
+                style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)' }}
+              >
+                Copy to Clipboard
+              </button>
+              <a
+                href={imgData}
+                download={`doyoung-top10-${activeTab}.png`}
+                className="flex-1 py-3 rounded-xl font-bold text-xs text-center flex items-center justify-center cursor-pointer"
+                style={{ background: '#C9A84C', color: '#0D0D0D' }}
+              >
+                Download Image
+              </a>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

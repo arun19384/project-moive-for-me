@@ -15,9 +15,7 @@ export default function ImportGuestBanner() {
   useEffect(() => {
     if (hasGuestData()) {
       const data = readAllGuestData()
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCounts({ titles: data.titles.length, watchlist: data.watchlist.length })
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setOpen(true)
     }
   }, [])

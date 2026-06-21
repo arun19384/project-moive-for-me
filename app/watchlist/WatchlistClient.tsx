@@ -127,9 +127,7 @@ export default function WatchlistClient({
 
   useEffect(() => {
     if (debouncedQuery.trim().length < 2) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setResults([])
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowResults(false)
       return
     }
@@ -221,33 +219,34 @@ export default function WatchlistClient({
               <X size={15} color="var(--faint)" />
             </button>
           )}
+
+          {showResults && results.length > 0 && (
+            <div className="absolute left-0 right-0 top-full mt-2 rounded-xl overflow-y-auto z-50"
+              style={{ border: '1px solid var(--border)', background: 'var(--surface-2)', maxHeight: '60vh', overscrollBehavior: 'contain' }}>
+              {results.map((r) => (
+                <button key={r.imdbId} type="button" onClick={() => addItem(r)}
+                  className="flex items-center gap-3 w-full px-3 py-2.5 text-left transition-colors"
+                  style={{ borderBottom: '1px solid var(--border-dim)' }}>
+                  {r.poster
+                    // eslint-disable-next-line @next/next/no-img-element
+                    ? <img src={posterSrc(r.poster, 'w185')} alt={r.title} loading="lazy" decoding="async" className="w-9 h-12 object-cover rounded-lg shrink-0" />
+                    : <div className="w-9 h-12 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold"
+                        style={{ background: 'var(--border)', color: 'var(--faint)' }}>{r.title[0]}</div>
+                  }
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold dy-text truncate">{r.title}</p>
+                    {r.year && <p className="text-xs mt-0.5" style={{ color: 'var(--dim)' }}>{r.year}</p>}
+                  </div>
+                  <span className="ml-auto text-xs px-2 py-0.5 rounded-full shrink-0 font-semibold"
+                    style={{ background: TYPE_COLOR[selectedType] + '22', color: TYPE_COLOR[selectedType] }}>
+                    + add
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         {searching && <p className="text-xs mt-2" style={{ color: 'var(--faint)' }}>Searching...</p>}
-        {showResults && results.length > 0 && (
-          <div className="mt-1 rounded-xl overflow-hidden z-10 relative"
-            style={{ border: '1px solid var(--border)', background: 'var(--surface-2)' }}>
-            {results.map((r) => (
-              <button key={r.imdbId} type="button" onClick={() => addItem(r)}
-                className="flex items-center gap-3 w-full px-3 py-2.5 text-left transition-colors"
-                style={{ borderBottom: '1px solid var(--border-dim)' }}>
-                {r.poster
-                  // eslint-disable-next-line @next/next/no-img-element
-                  ? <img src={posterSrc(r.poster, 'w185')} alt={r.title} loading="lazy" decoding="async" className="w-9 h-12 object-cover rounded-lg shrink-0" />
-                  : <div className="w-9 h-12 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold"
-                      style={{ background: 'var(--border)', color: 'var(--faint)' }}>{r.title[0]}</div>
-                }
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold dy-text truncate">{r.title}</p>
-                  {r.year && <p className="text-xs mt-0.5" style={{ color: 'var(--dim)' }}>{r.year}</p>}
-                </div>
-                <span className="ml-auto text-xs px-2 py-0.5 rounded-full shrink-0 font-semibold"
-                  style={{ background: TYPE_COLOR[selectedType] + '22', color: TYPE_COLOR[selectedType] }}>
-                  + add
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {items.length > 0 && (
