@@ -6,6 +6,7 @@ import { createElement, useEffect, useState } from 'react'
 import { User, Sun, Moon, Download, Trash2, Info, ChevronRight, Award, Check, LogIn, LogOut } from 'lucide-react'
 import { RARITY_COLOR, BADGE_STORAGE_KEY, resolveIcon, RARITY_ORDER, type Rarity } from '@/lib/badges'
 import { signOutAction } from './actions'
+import pkg from '@/package.json'
 
 type Theme = 'dark' | 'light'
 
@@ -271,7 +272,7 @@ export default function SettingsPage() {
             Do young
           </p>
           <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>ดูยัง? your watched shelf</p>
-          <p className="text-xs mt-3" style={{ color: 'var(--faint)' }}>v0.1.0 · Phase 1</p>
+          <p className="text-xs mt-3" style={{ color: 'var(--faint)' }}>v{pkg.version}</p>
         </div>
       </Section>
     </div>
