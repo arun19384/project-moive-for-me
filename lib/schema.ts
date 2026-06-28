@@ -93,6 +93,14 @@ export const watchlistItems = mysqlTable('watchlist_items', {
   addedAt: text('added_at'),
 })
 
+export const passwordResetTokens = mysqlTable('password_reset_tokens', {
+  token: varchar('token', { length: 255 }).primaryKey(),
+  userId: varchar('user_id', { length: 255 })
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  expires: datetime('expires', { mode: 'string' }).notNull(),
+})
+
 // ---------- Types ----------
 
 export type User = typeof users.$inferSelect
@@ -107,3 +115,5 @@ export type NewWatchlistItem = typeof watchlistItems.$inferInsert
 export type CustomShelf = typeof customShelves.$inferSelect
 export type NewCustomShelf = typeof customShelves.$inferInsert
 export type ShelfItem = typeof shelfItems.$inferSelect
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect
+export type NewPasswordResetToken = typeof passwordResetTokens.$inferInsert

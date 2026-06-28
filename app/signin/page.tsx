@@ -50,6 +50,11 @@ export default async function SignInPage({
           autoComplete="current-password"
           className="w-full bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl px-4 py-3 text-sm placeholder:text-[#555] focus:outline-none focus:border-[#C9A84C]"
         />
+        <div className="flex justify-end mt-1">
+          <Link href="/forgot-password" className="text-xs text-[#888] hover:text-[#C9A84C] transition-colors">
+            ลืมรหัสผ่าน?
+          </Link>
+        </div>
         {error === 'invalid' && (
           <p className="text-xs text-red-400 text-center">Email หรือ password ไม่ถูกต้อง</p>
         )}
