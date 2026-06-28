@@ -1,3 +1,5 @@
+import Image from 'next/image'
+
 export type Provider = { name: string; logo: string | null }
 
 export type WatchProvidersData = {
@@ -12,8 +14,7 @@ const REGION_LABEL: Record<string, string> = { TH: 'ในไทย', US: 'ใ�
 
 function Logo({ p }: { p: Provider }) {
   return p.logo ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={p.logo} alt={p.name} title={p.name}
+    <Image src={p.logo} alt={p.name} title={p.name} width={36} height={36}
       className="w-9 h-9 rounded-lg object-cover shrink-0"
       style={{ border: '1px solid var(--border)' }} />
   ) : (

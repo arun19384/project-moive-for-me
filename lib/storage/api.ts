@@ -22,7 +22,7 @@ export const apiStorage: Storage = {
     const res = await fetch('/api/titles', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...input, genreIds: [] }),
+      body: JSON.stringify({ ...input, genreIds: input.genreIds || [] }),
     })
     if (!res.ok) throw new Error('failed to add entry')
   },

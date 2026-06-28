@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { ArrowLeft, Camera, Save, Trash2 } from 'lucide-react'
 
 type Profile = {
@@ -136,8 +137,7 @@ export default function ProfileClient({ initial }: { initial: Profile }) {
       <div className="flex flex-col items-center mb-8">
         <div className="relative">
           {image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={image} alt="avatar"
+            <Image src={image} alt="avatar" width={112} height={112}
               className="w-28 h-28 rounded-full object-cover"
               style={{ border: '3px solid #C9A84C', boxShadow: '0 8px 24px rgba(201,168,76,0.25)' }} />
           ) : (

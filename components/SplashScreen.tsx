@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 
 type Phase = 'show' | 'hiding' | 'done'
 
@@ -37,10 +38,11 @@ export default function SplashScreen() {
         pointerEvents: phase === 'hiding' ? 'none' : 'auto',
       }}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+      <Image
         src="/icon.png"
         alt=""
+        width={96}
+        height={96}
         className="dy-splash-logo w-24 h-24 rounded-3xl"
         style={{
           border: '1px solid var(--border)',

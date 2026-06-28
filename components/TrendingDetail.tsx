@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { ArrowLeft, Play, Plus, X, Star } from 'lucide-react'
 import WhereToWatch, { type WatchProvidersData } from '@/components/WhereToWatch'
 import { posterSrc } from '@/lib/img'
@@ -75,8 +76,7 @@ export default function TrendingDetail({
 
         <div className="flex gap-4 mb-6">
           {item.poster ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={posterSrc(item.poster, 'w342')} alt={item.title} decoding="async" className="w-28 h-40 object-cover rounded-xl shrink-0" />
+            <Image src={posterSrc(item.poster, 'w342')} alt={item.title} width={112} height={160} className="w-28 h-40 object-cover rounded-xl shrink-0" />
           ) : (
             <div className="w-28 h-40 rounded-xl shrink-0 flex items-center justify-center text-3xl font-bold"
               style={{ background: 'var(--surface)', color: 'var(--faintest)' }}>
@@ -171,10 +171,7 @@ export default function TrendingDetail({
                       {tmdb.cast.map((c) => (
                         <div key={c.name + c.character} className="shrink-0 w-20">
                           {c.profile ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={c.profile} alt={c.name} loading="lazy" decoding="async"
-                              className="w-20 h-20 rounded-full object-cover mb-1.5"
-                              style={{ border: '1px solid var(--border)' }} />
+                            <Image src={c.profile} alt={c.name} width={80} height={80} className="w-20 h-20 rounded-full object-cover mb-1.5" style={{ border: '1px solid var(--border)' }} />
                           ) : (
                             <div className="w-20 h-20 rounded-full mb-1.5 flex items-center justify-center text-lg font-bold"
                               style={{ background: 'var(--surface)', color: 'var(--faintest)', border: '1px solid var(--border)' }}>

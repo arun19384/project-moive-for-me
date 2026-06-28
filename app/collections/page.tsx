@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { createElement, useEffect, useMemo, useState } from 'react'
 import AppHeader from '@/components/AppHeader'
 import {
@@ -439,8 +440,7 @@ function ShelfRow({ shelf, onDelete }: { shelf: ShelfDTO; onDelete: () => void }
       <div className="grid grid-cols-2 gap-0.5 w-16 h-16 rounded-lg overflow-hidden shrink-0">
         {previews.slice(0, 4).map((cover, i) => (
           cover ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img key={i} src={posterSrc(cover, 'w185')} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
+            <Image key={i} src={posterSrc(cover, 'w185')} alt="" width={32} height={32} className="w-full h-full object-cover" />
           ) : (
             <div key={i} style={{ background: 'var(--surface-2)' }} />
           )

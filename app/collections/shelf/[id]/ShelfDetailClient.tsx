@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { ArrowLeft, Trash2, Pencil, X, Check } from 'lucide-react'
@@ -118,8 +119,7 @@ export default function ShelfDetailClient({ initial }: { initial: ShelfDetail })
             <div key={it.titleId} className="relative group">
               <Link href={`/title/${it.titleId}`}>
                 {it.coverUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={posterSrc(it.coverUrl, 'w342')} alt={it.title} loading="lazy" decoding="async"
+                  <Image src={posterSrc(it.coverUrl, 'w342')} alt={it.title} width={342} height={513}
                     className="w-full aspect-[2/3] object-cover rounded-xl"
                     style={{ border: '1px solid var(--border)' }} />
                 ) : (

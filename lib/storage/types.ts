@@ -14,6 +14,7 @@ export type AddInput = {
   notes: string | null
   coverUrl: string | null
   releaseYear: number | null
+  genreIds?: number[]
 }
 
 export type TitlePatch = {
@@ -27,6 +28,7 @@ export type TitlePatch = {
   watchedDate?: string | null
   platform?: string | null
   notes?: string | null
+  genreIds?: number[]
 }
 
 export type WatchlistAddInput = {

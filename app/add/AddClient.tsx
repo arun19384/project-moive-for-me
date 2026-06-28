@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Image from 'next/image'
 import RatingInput from '@/components/RatingInput'
 import { Search, X } from 'lucide-react'
 import { getStorage, type StorageMode } from '@/lib/storage'
@@ -42,6 +43,8 @@ export default function AddClient({ mode }: { mode: StorageMode }) {
   const [notes, setNotes] = useState('')
   const [coverUrl, setCoverUrl] = useState<string | null>(null)
   const [releaseYear, setReleaseYear] = useState<number | null>(null)
+  const [selectedGenres, setSelectedGenres] = useState<number[]>([])
+  const [allGenres, setAllGenres] = useState<{id: number, name: string}[]>([])
 
   const searchRef = useRef<HTMLDivElement>(null)
 
@@ -59,6 +62,8 @@ export default function AddClient({ mode }: { mode: StorageMode }) {
     } else if (q) {
       setSearchQuery(q)
     }
+
+    fetch('/api/genres').then(r => r.json()).then(setAllGenres).catch(() => {})
     /* eslint-enable react-hooks/set-state-in-effect */
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -115,6 +120,7 @@ export default function AddClient({ mode }: { mode: StorageMode }) {
         notes: notes || null,
         coverUrl: coverUrl || null,
         releaseYear: releaseYear || null,
+        genreIds: selectedGenres,
       })
       router.push('/shelf')
     } catch {
@@ -168,8 +174,7 @@ export default function AddClient({ mode }: { mode: StorageMode }) {
                   style={{ borderBottom: '1px solid var(--border-dim)' }}
                 >
                   {r.poster ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={posterSrc(r.poster, 'w185')} alt={r.title} loading="lazy" decoding="async" className="w-9 h-12 object-cover rounded-lg shrink-0" />
+                    <Image src={posterSrc(r.poster, 'w185')} alt={r.title} width={36} height={48} className="w-9 h-12 object-cover rounded-lg shrink-0" />
                   ) : (
                     <div className="w-9 h-12 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold"
                       style={{ background: 'var(--border)', color: 'var(--faint)' }}>
@@ -193,8 +198,7 @@ export default function AddClient({ mode }: { mode: StorageMode }) {
 
       {coverUrl && (
         <div className="flex gap-3 mb-5 p-3 rounded-xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={posterSrc(coverUrl, 'w185')} alt={title} decoding="async" className="w-14 h-20 object-cover rounded-lg shrink-0" />
+          <Image src={posterSrc(coverUrl, 'w185')} alt={title} width={56} height={80} className="w-14 h-20 object-cover rounded-lg shrink-0" />
           <div className="min-w-0">
             <p className="text-sm font-bold dy-text truncate">{title}</p>
             {releaseYear && <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>{releaseYear}</p>}
@@ -233,6 +237,31 @@ export default function AddClient({ mode }: { mode: StorageMode }) {
               {t}
             </button>
           ))}
+        </div>
+      </div>
+
+      <div className="mb-5">
+        <div className="mb-2">{label('Genres', true)}</div>
+        <div className="flex flex-wrap gap-2">
+          {allGenres.map((g) => {
+            const isSelected = selectedGenres.includes(g.id)
+            return (
+              <button
+                key={g.id}
+                type="button"
+                onClick={() => setSelectedGenres(prev => 
+                  isSelected ? prev.filter(id => id !== g.id) : [...prev, g.id]
+                )}
+                className="px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
+                style={{
+                  background: isSelected ? '#C9A84C' : 'var(--surface)',
+                  color: isSelected ? '#0D0D0D' : 'var(--muted)',
+                  border: `1px solid ${isSelected ? '#C9A84C' : 'var(--border-strong)'}`,
+                }}>
+                {g.name}
+              </button>
+            )
+          })}
         </div>
       </div>
 

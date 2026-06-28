@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { createElement, useEffect, useState } from 'react'
 import { Settings, Library } from 'lucide-react'
 import { RARITY_COLOR, BADGE_STORAGE_KEY, resolveIcon, type Rarity } from '@/lib/badges'
@@ -42,7 +43,7 @@ export default function AppHeader({ right }: AppHeaderProps) {
   return (
     <div className="flex items-center justify-between pt-12 pb-4">
       <div className="flex items-center gap-3">
-        <img src="/icon.png" alt="Do young" className="w-11 h-11 rounded-xl shrink-0"
+        <Image src="/icon.png" alt="Do young" width={44} height={44} className="w-11 h-11 rounded-xl shrink-0"
           style={{ border: '1px solid var(--border)' }} />
         {badge && badgeColor && (
           <Link

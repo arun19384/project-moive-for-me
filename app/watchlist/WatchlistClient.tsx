@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Search, X, Trash2, Play, Bookmark, Dices } from 'lucide-react'
 import AppHeader from '@/components/AppHeader'
 import WhereToWatch, { type WatchProvidersData } from '@/components/WhereToWatch'
@@ -138,6 +139,11 @@ export default function WatchlistClient({
         setResults(data)
         setShowResults(true)
       })
+      .catch((e) => {
+        console.error(e)
+        setResults([])
+        setShowResults(false)
+      })
       .finally(() => setSearching(false))
   }, [debouncedQuery])
 
@@ -228,8 +234,7 @@ export default function WatchlistClient({
                   className="flex items-center gap-3 w-full px-3 py-2.5 text-left transition-colors"
                   style={{ borderBottom: '1px solid var(--border-dim)' }}>
                   {r.poster
-                    // eslint-disable-next-line @next/next/no-img-element
-                    ? <img src={posterSrc(r.poster, 'w185')} alt={r.title} loading="lazy" decoding="async" className="w-9 h-12 object-cover rounded-lg shrink-0" />
+                    ? <Image src={posterSrc(r.poster, 'w185')} alt={r.title} width={36} height={48} className="w-9 h-12 object-cover rounded-lg shrink-0" />
                     : <div className="w-9 h-12 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold"
                         style={{ background: 'var(--border)', color: 'var(--faint)' }}>{r.title[0]}</div>
                   }
@@ -272,8 +277,7 @@ export default function WatchlistClient({
               <div className="w-12 h-16 rounded-xl overflow-hidden shrink-0 flex items-center justify-center"
                 style={{ background: 'var(--border)' }}>
                 {item.coverUrl
-                  // eslint-disable-next-line @next/next/no-img-element
-                  ? <img src={posterSrc(item.coverUrl, 'w185')} alt={item.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                  ? <Image src={posterSrc(item.coverUrl, 'w185')} alt={item.title} width={48} height={64} className="w-full h-full object-cover" />
                   : <span className="text-lg font-bold" style={{ color: 'var(--faint)' }}>{item.title[0]?.toUpperCase()}</span>
                 }
               </div>
@@ -334,8 +338,7 @@ export default function WatchlistClient({
                     opacity: rolling ? 0.7 : 1,
                   }}>
                   {flashItem.coverUrl
-                    // eslint-disable-next-line @next/next/no-img-element
-                    ? <img src={posterSrc(flashItem.coverUrl, 'w342')} alt={flashItem.title} decoding="async" className="w-full h-full object-cover" />
+                    ? <Image src={posterSrc(flashItem.coverUrl, 'w342')} alt={flashItem.title} width={128} height={192} className="w-full h-full object-cover" />
                     : <span className="text-3xl font-bold" style={{ color: 'var(--faint)' }}>{flashItem.title[0]?.toUpperCase()}</span>
                   }
                 </div>

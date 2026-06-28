@@ -1,4 +1,5 @@
 import { Check } from 'lucide-react'
+import Image from 'next/image'
 import { posterSrc } from '@/lib/img'
 
 const GRADIENTS = [
@@ -50,9 +51,7 @@ export default function CoverCard({ title, type, rating, coverUrl, selectMode, s
     >
       <div className="relative aspect-[3/4]" style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}>
         {coverUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={posterSrc(coverUrl, 'w342')} alt={title} loading="lazy" decoding="async"
-            className="absolute inset-0 w-full h-full object-cover" />
+          <Image src={posterSrc(coverUrl, 'w342')} alt={title} fill sizes="(max-width: 768px) 33vw, 25vw" className="absolute inset-0 w-full h-full object-cover" />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="text-3xl font-bold opacity-40" style={{ color: '#ffffff' }}>{initials}</span>

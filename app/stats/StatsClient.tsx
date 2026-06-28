@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useRef } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import AppHeader from '@/components/AppHeader'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
@@ -65,9 +66,8 @@ export default function StatsClient({
   const [stats, setStats] = useState<Stats | null>(initialStats)
   const [titles, setTitles] = useState<ShelfTitle[]>(initialTitles ?? [])
   const [loading, setLoading] = useState(initialStats == null)
-  const [activeTab, setActiveTab] = useState<'all' | 'movie' | 'series' | 'anime'>('all')
-  const [lists, setLists] = useState<Record<'all' | 'movie' | 'series' | 'anime', (number | null)[]>>({
-    all: Array(10).fill(null),
+  const [activeTab, setActiveTab] = useState<'movie' | 'series' | 'anime'>('movie')
+  const [lists, setLists] = useState<Record<'movie' | 'series' | 'anime', (number | null)[]>>({
     movie: Array(10).fill(null),
     series: Array(10).fill(null),
     anime: Array(10).fill(null),
@@ -94,24 +94,34 @@ export default function StatsClient({
   }, [])
 
   useEffect(() => {
-    try {
-      const loadList = (key: string) => {
-        const raw = localStorage.getItem(key)
-        if (raw) {
-          const parsed = JSON.parse(raw)
-          if (Array.isArray(parsed) && parsed.length === 10) return parsed
+    if (mode === 'signed-in') {
+      fetch('/api/top10')
+        .then((r) => r.json())
+        .then((data) => {
+          if (!data.error) {
+            setLists(data)
+          }
+        })
+        .catch(() => {})
+    } else {
+      try {
+        const loadList = (key: string) => {
+          const raw = localStorage.getItem(key)
+          if (raw) {
+            const parsed = JSON.parse(raw)
+            if (Array.isArray(parsed) && parsed.length === 10) return parsed
+          }
+          return Array(10).fill(null)
         }
-        return Array(10).fill(null)
-      }
-      const initialLists = {
-        all: loadList(TOP10_KEY),
-        movie: loadList(`${TOP10_KEY}:movie`),
-        series: loadList(`${TOP10_KEY}:series`),
-        anime: loadList(`${TOP10_KEY}:anime`),
-      }
-      setTimeout(() => setLists(initialLists), 0)
-    } catch {}
-  }, [])
+        const initialLists = {
+          movie: loadList(`${TOP10_KEY}:movie`),
+          series: loadList(`${TOP10_KEY}:series`),
+          anime: loadList(`${TOP10_KEY}:anime`),
+        }
+        setTimeout(() => setLists(initialLists), 0)
+      } catch {}
+    }
+  }, [mode])
 
   if (loading || !stats) {
     return (
@@ -163,8 +173,17 @@ export default function StatsClient({
 
   function saveTop10(arr: (number | null)[]) {
     setLists(prev => ({ ...prev, [activeTab]: arr }))
-    const key = activeTab === 'all' ? TOP10_KEY : `${TOP10_KEY}:${activeTab}`
-    try { localStorage.setItem(key, JSON.stringify(arr)) } catch {}
+    
+    if (mode === 'signed-in') {
+      fetch('/api/top10', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listType: activeTab, list: arr }),
+      }).catch(() => {})
+    } else {
+      const key = `${TOP10_KEY}:${activeTab}`
+      try { localStorage.setItem(key, JSON.stringify(arr)) } catch {}
+    }
   }
   function setSlot(slot: number, titleId: number | null) {
     const next = [...top10]
@@ -330,7 +349,7 @@ export default function StatsClient({
 
         {/* Tab Selector */}
         <div className="flex gap-1.5 mb-4 p-1 rounded-xl" style={{ background: 'var(--surface-2)', border: '1px solid var(--border-dim)' }}>
-          {(['all', 'movie', 'series', 'anime'] as const).map(tab => {
+          {(['movie', 'series', 'anime'] as const).map(tab => {
             const isActive = activeTab === tab
             return (
               <button
@@ -346,7 +365,7 @@ export default function StatsClient({
                   color: isActive ? '#0D0D0D' : 'var(--muted)',
                 }}
               >
-                {tab === 'all' ? 'All' : tab}
+                {tab}
               </button>
             )
           })}
@@ -431,7 +450,7 @@ export default function StatsClient({
                   className="flex items-center gap-3 flex-1 min-w-0 bg-transparent border-0 p-0 text-left"
                 >
                   {t.coverUrl ? (
-                    <img src={posterSrc(t.coverUrl, 'w185')} alt={t.title} loading="lazy" decoding="async" className="w-9 h-12 object-cover rounded-lg shrink-0" />
+                    <Image src={posterSrc(t.coverUrl, 'w185')} alt={t.title} width={36} height={48} className="w-9 h-12 object-cover rounded-lg shrink-0" />
                   ) : (
                     <div className="w-9 h-12 rounded-lg shrink-0 flex items-center justify-center text-sm font-bold"
                       style={{ background: 'var(--border)', color: 'var(--faint)' }}>
@@ -734,7 +753,7 @@ export default function StatsClient({
                 className="shrink-0 w-24 text-left p-0 bg-transparent border-0">
                 <div className="relative aspect-[2/3] rounded-xl overflow-hidden" style={{ background: 'var(--surface)' }}>
                   {item.coverUrl ? (
-                    <img src={posterSrc(item.coverUrl, 'w185')} alt={item.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                    <Image src={posterSrc(item.coverUrl, 'w185')} alt={item.title} width={96} height={144} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-xl font-bold" style={{ color: 'var(--faint)' }}>
                       {item.title[0]?.toUpperCase()}
@@ -764,7 +783,7 @@ export default function StatsClient({
           alreadyPicked={new Set(top10.filter((x): x is number => x != null))}
           onPick={(id) => { setSlot(picking, id); setPicking(null) }}
           onClose={() => setPicking(null)}
-          filterType={activeTab === 'all' ? undefined : activeTab}
+          filterType={activeTab}
         />
       )}
 
@@ -851,7 +870,7 @@ function TitlePickerModal({
                   >
                     <div className="aspect-[2/3] relative">
                       {t.coverUrl ? (
-                        <img src={posterSrc(t.coverUrl, 'w185')} alt={t.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                        <Image src={posterSrc(t.coverUrl, 'w185')} alt={t.title} width={96} height={144} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-2xl font-bold"
                           style={{ background: 'var(--border)', color: 'var(--faint)' }}>
@@ -1266,6 +1285,7 @@ function ShareCardModal({
         {imgData && !loading && !error && (
           <div className="flex-1 overflow-y-auto px-4 pb-4 flex flex-col items-center gap-4 mt-4">
             <div className="w-full max-w-[300px] aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl border border-[rgba(201,168,76,0.3)]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={imgData} alt="Shareable Card Preview" className="w-full h-full object-contain" />
             </div>
             <p className="text-[10px] text-center" style={{ color: 'var(--muted)' }}>
@@ -1395,7 +1415,7 @@ function TopHeroSlot({
       }}
     >
       {t.coverUrl ? (
-        <img src={posterSrc(t.coverUrl, 'w500')} alt={t.title} decoding="async" className="absolute inset-0 w-full h-full object-cover" />
+        <Image src={posterSrc(t.coverUrl, 'w500')} alt={t.title} width={500} height={750} className="absolute inset-0 w-full h-full object-cover" />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center text-6xl font-bold"
           style={{ background: 'var(--border)', color: 'var(--faint)' }}>
@@ -1521,7 +1541,7 @@ function TopPodiumSlot({
       }}
     >
       {t.coverUrl ? (
-        <img src={posterSrc(t.coverUrl, 'w342')} alt={t.title} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
+        <Image src={posterSrc(t.coverUrl, 'w342')} alt={t.title} width={342} height={513} className="absolute inset-0 w-full h-full object-cover" />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center text-4xl font-bold"
           style={{ background: 'var(--border)', color: 'var(--faint)' }}>

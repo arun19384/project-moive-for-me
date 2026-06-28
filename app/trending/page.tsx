@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import AppHeader from '@/components/AppHeader'
 import TrendingDetail, { type TrendingItem } from '@/components/TrendingDetail'
 import { Flame } from 'lucide-react'
@@ -91,8 +92,7 @@ export default function TrendingPage() {
               <div className="relative aspect-[2/3] rounded-xl overflow-hidden"
                 style={{ background: 'var(--surface)' }}>
                 {item.poster ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={posterSrc(item.poster, 'w342')} alt={item.title} loading="lazy" decoding="async"
+                  <Image src={posterSrc(item.poster, 'w342')} alt={item.title} width={342} height={513}
                     className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-2xl font-bold"

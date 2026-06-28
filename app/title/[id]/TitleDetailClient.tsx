@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { ArrowLeft, Trash2, Play, X } from 'lucide-react'
 import RatingInput from '@/components/RatingInput'
 import ShelfPicker from '@/components/ShelfPicker'
@@ -58,6 +59,8 @@ export default function TitleDetailClient({
   const [watchedDate, setWatchedDate] = useState(initial?.entry?.watchedDate ?? '')
   const [platform, setPlatform] = useState(initial?.entry?.platform ?? '')
   const [notes, setNotes] = useState(initial?.entry?.notes ?? '')
+  const [selectedGenres, setSelectedGenres] = useState<number[]>(initial?.genres?.map(g => g.id) ?? [])
+  const [allGenres, setAllGenres] = useState<{id: number, name: string}[]>([])
 
   useEffect(() => {
     if (initial == null) {
@@ -70,10 +73,13 @@ export default function TitleDetailClient({
           setWatchedDate(d.entry?.watchedDate ?? '')
           setPlatform(d.entry?.platform ?? '')
           setNotes(d.entry?.notes ?? '')
+          setSelectedGenres(d.genres?.map(g => g.id) ?? [])
         }
         setLoading(false)
       })
     }
+    
+    fetch('/api/genres').then(r => r.json()).then(setAllGenres).catch(() => {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -104,6 +110,7 @@ export default function TitleDetailClient({
         watchedDate: watchedDate || null,
         platform: platform || null,
         notes: notes || null,
+        genreIds: selectedGenres,
       })
       router.push('/shelf')
     } catch {
@@ -164,8 +171,7 @@ export default function TitleDetailClient({
 
       <div className="flex gap-4 mb-6">
         {data.coverUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={posterSrc(data.coverUrl, 'w342')} alt={data.title} decoding="async" className="w-28 h-40 object-cover rounded-xl shrink-0" />
+          <Image src={posterSrc(data.coverUrl, 'w342')} alt={data.title} width={112} height={160} className="w-28 h-40 object-cover rounded-xl shrink-0" />
         ) : (
           <div className="w-28 h-40 rounded-xl shrink-0 flex items-center justify-center text-3xl font-bold"
             style={{ background: 'var(--surface)', color: 'var(--faintest)' }}>
@@ -252,8 +258,7 @@ export default function TitleDetailClient({
                 {tmdb.cast.map((c) => (
                   <div key={c.name + c.character} className="shrink-0 w-20">
                     {c.profile ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={c.profile} alt={c.name} loading="lazy" decoding="async"
+                      <Image src={c.profile} alt={c.name} width={80} height={80}
                         className="w-20 h-20 rounded-full object-cover mb-1.5"
                         style={{ border: '1px solid var(--border)' }} />
                     ) : (
@@ -312,6 +317,30 @@ export default function TitleDetailClient({
         </div>
       </div>
 
+      <div className="mb-5">
+        <div className="mb-2">{label('Genres', true)}</div>
+        <div className="flex flex-wrap gap-2">
+          {allGenres.map((g) => {
+            const isSelected = selectedGenres.includes(g.id)
+            return (
+              <button
+                key={g.id}
+                type="button"
+                onClick={() => setSelectedGenres(prev => 
+                  isSelected ? prev.filter(id => id !== g.id) : [...prev, g.id]
+                )}
+                className="px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
+                style={{
+                  background: isSelected ? '#C9A84C' : 'var(--surface)',
+                  color: isSelected ? '#0D0D0D' : 'var(--muted)',
+                  border: `1px solid ${isSelected ? '#C9A84C' : 'var(--border-strong)'}`,
+                }}>
+                {g.name}
+              </button>
+            )
+          })}
+        </div>
+      </div>
       <div className="mb-5">
         <div className="mb-2">{label('Your rating', true)}</div>
         <RatingInput value={rating} onChange={setRating} />

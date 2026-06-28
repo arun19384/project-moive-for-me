@@ -19,9 +19,10 @@ export const userTop10 = mysqlTable('user_top10', {
   userId: varchar('user_id', { length: 255 })
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
+  listType: mysqlEnum('list_type', ['movie', 'series', 'anime']).default('movie').notNull(),
   position: int('position').notNull(),
   titleId: int('title_id').notNull().references(() => titles.id, { onDelete: 'cascade' }),
-}, (t) => [primaryKey({ columns: [t.userId, t.position] })])
+}, (t) => [primaryKey({ columns: [t.userId, t.listType, t.position] })])
 
 // ---------- Catalog (shared) ----------
 

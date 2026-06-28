@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { createElement, useEffect, useState } from 'react'
 import { User, Sun, Moon, Download, Trash2, Info, ChevronRight, Award, Check, LogIn, LogOut } from 'lucide-react'
 import { RARITY_COLOR, BADGE_STORAGE_KEY, resolveIcon, RARITY_ORDER, type Rarity } from '@/lib/badges'
@@ -122,8 +123,7 @@ export default function SettingsPage() {
               <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold overflow-hidden"
                 style={{ background: '#C9A84C', color: '#0D0D0D' }}>
                 {me.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={me.image} alt="avatar" className="w-full h-full object-cover" />
+                  <Image src={me.image} alt="avatar" width={56} height={56} className="w-full h-full object-cover" />
                 ) : (
                   (me.username ?? me.name ?? me.email)[0]?.toUpperCase()
                 )}
