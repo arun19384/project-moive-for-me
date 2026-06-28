@@ -44,7 +44,7 @@ export default function AddClient({ mode }: { mode: StorageMode }) {
   const [coverUrl, setCoverUrl] = useState<string | null>(null)
   const [releaseYear, setReleaseYear] = useState<number | null>(null)
   const [selectedGenres, setSelectedGenres] = useState<number[]>([])
-  const [allGenres, setAllGenres] = useState<{id: number, name: string}[]>([])
+  const [allGenres, setAllGenres] = useState<{ id: number, name: string }[]>([])
 
   const searchRef = useRef<HTMLDivElement>(null)
 
@@ -63,7 +63,7 @@ export default function AddClient({ mode }: { mode: StorageMode }) {
       setSearchQuery(q)
     }
 
-    fetch('/api/genres').then(r => r.json()).then(setAllGenres).catch(() => {})
+    fetch('/api/genres').then(r => r.json()).then(setAllGenres).catch(() => { })
     /* eslint-enable react-hooks/set-state-in-effect */
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -143,57 +143,57 @@ export default function AddClient({ mode }: { mode: StorageMode }) {
       </div>
 
       {!coverUrl && (
-      <div className="mb-5" ref={searchRef}>
-        <div className="mb-2">{label('Search title')}</div>
-        <div className="relative">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" color="var(--faint)" />
-          <input
-            type="text"
-            placeholder="e.g. Spirited Away, Attack on Titan..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl pl-9 pr-9 py-3 text-sm dy-text outline-none"
-            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-            autoComplete="off"
-          />
-          {searchQuery && (
-            <button type="button" onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2">
-              <X size={15} color="var(--faint)" />
-            </button>
-          )}
+        <div className="mb-5" ref={searchRef}>
+          <div className="mb-2">{label('Search title')}</div>
+          <div className="relative">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" color="var(--faint)" />
+            <input
+              type="text"
+              placeholder="e.g. Spirited Away, Attack on Titan..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-xl pl-9 pr-9 py-3 text-sm dy-text outline-none"
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+              autoComplete="off"
+            />
+            {searchQuery && (
+              <button type="button" onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2">
+                <X size={15} color="var(--faint)" />
+              </button>
+            )}
 
-          {showResults && searchResults.length > 0 && (
-            <div className="absolute left-0 right-0 top-full mt-2 rounded-xl overflow-y-auto z-50"
-              style={{ border: '1px solid var(--border)', background: 'var(--surface-2)', maxHeight: '60vh', overscrollBehavior: 'contain' }}>
-              {searchResults.map((r) => (
-                <button
-                  key={r.imdbId}
-                  type="button"
-                  onClick={() => selectResult(r)}
-                  className="flex items-center gap-3 w-full px-3 py-2.5 text-left transition-colors hover:bg-[#1E1E1E]"
-                  style={{ borderBottom: '1px solid var(--border-dim)' }}
-                >
-                  {r.poster ? (
-                    <Image src={posterSrc(r.poster, 'w185')} alt={r.title} width={36} height={48} className="w-9 h-12 object-cover rounded-lg shrink-0" />
-                  ) : (
-                    <div className="w-9 h-12 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold"
-                      style={{ background: 'var(--border)', color: 'var(--faint)' }}>
-                      {r.title[0]}
+            {showResults && searchResults.length > 0 && (
+              <div className="absolute left-0 right-0 top-full mt-2 rounded-xl overflow-y-auto z-50"
+                style={{ border: '1px solid var(--border)', background: 'var(--surface-2)', maxHeight: '60vh', overscrollBehavior: 'contain' }}>
+                {searchResults.map((r) => (
+                  <button
+                    key={r.imdbId}
+                    type="button"
+                    onClick={() => selectResult(r)}
+                    className="flex items-center gap-3 w-full px-3 py-2.5 text-left transition-colors hover:bg-[#1E1E1E]"
+                    style={{ borderBottom: '1px solid var(--border-dim)' }}
+                  >
+                    {r.poster ? (
+                      <Image src={posterSrc(r.poster, 'w185')} alt={r.title} width={36} height={48} className="w-9 h-12 object-cover rounded-lg shrink-0" />
+                    ) : (
+                      <div className="w-9 h-12 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold"
+                        style={{ background: 'var(--border)', color: 'var(--faint)' }}>
+                        {r.title[0]}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold dy-text truncate">{r.title}</p>
+                      {r.year && <p className="text-xs mt-0.5" style={{ color: 'var(--dim)' }}>{r.year}</p>}
                     </div>
-                  )}
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold dy-text truncate">{r.title}</p>
-                    {r.year && <p className="text-xs mt-0.5" style={{ color: 'var(--dim)' }}>{r.year}</p>}
-                  </div>
-                </button>
-              ))}
-            </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {searching && (
+            <p className="text-xs mt-2" style={{ color: 'var(--faint)' }}>Searching...</p>
           )}
         </div>
-        {searching && (
-          <p className="text-xs mt-2" style={{ color: 'var(--faint)' }}>Searching...</p>
-        )}
-      </div>
       )}
 
       {coverUrl && (
@@ -249,7 +249,7 @@ export default function AddClient({ mode }: { mode: StorageMode }) {
               <button
                 key={g.id}
                 type="button"
-                onClick={() => setSelectedGenres(prev => 
+                onClick={() => setSelectedGenres(prev =>
                   isSelected ? prev.filter(id => id !== g.id) : [...prev, g.id]
                 )}
                 className="px-3 py-1.5 rounded-full text-sm font-medium transition-colors"

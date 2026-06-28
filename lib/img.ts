@@ -37,8 +37,8 @@ export function posterSrc(
   url: string | null | undefined,
   tmdbSize: TmdbSize = 'w342',
   amazonWidth?: number,
-): string | undefined {
-  if (!url) return undefined
+): string {
+  if (!url) return ''
   if (url.includes('image.tmdb.org')) return resizeTmdb(url, tmdbSize)
   if (url.includes('media-amazon.com')) {
     const w = amazonWidth ?? (Number(tmdbSize.replace('w', '')) || 342)
