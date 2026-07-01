@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
+
+export const dynamic = 'force-dynamic'
 import { db } from '@/lib/db'
 import { titles, watchEntries, titleGenres } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
@@ -76,6 +79,9 @@ export async function POST(req: NextRequest) {
 
   const [newTitle] = await db.select().from(titles).where(eq(titles.id, newTitleId))
   const [entry] = await db.select().from(watchEntries).where(eq(watchEntries.id, newEntryId))
+
+  revalidatePath('/shelf')
+  revalidatePath('/stats')
 
   return NextResponse.json({ title: newTitle, entry }, { status: 201 })
 }

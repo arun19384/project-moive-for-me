@@ -122,6 +122,7 @@ export default function AddClient({ mode }: { mode: StorageMode }) {
         releaseYear: releaseYear || null,
         genreIds: selectedGenres,
       })
+      router.refresh()
       router.push('/shelf')
     } catch {
       setError('Something went wrong. Please try again.')

@@ -95,7 +95,7 @@ export default function StatsClient({
 
   useEffect(() => {
     if (mode === 'signed-in') {
-      fetch('/api/top10')
+      fetch('/api/top10', { cache: 'no-store' })
         .then((r) => r.json())
         .then((data) => {
           if (!data.error) {

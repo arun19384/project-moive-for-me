@@ -1,4 +1,7 @@
 import { NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
+
+export const dynamic = 'force-dynamic'
 import { db } from '@/lib/db'
 import { userTop10 } from '@/lib/schema'
 import { auth } from '@/auth'
@@ -77,6 +80,8 @@ export async function PUT(req: Request) {
     if (inserts.length > 0) {
       await db.insert(userTop10).values(inserts)
     }
+
+    revalidatePath('/stats')
 
     return NextResponse.json({ success: true })
   } catch (error) {
